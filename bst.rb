@@ -71,8 +71,8 @@ class Tree
         # is always left child of its parent
         # we can safely make successor's right
         # right child as left of its parent.
-        # If there is no succ, then assign
-        # succ.right to succParent.right
+        # If there is no successor, then assign
+        # successor.right to parent.right
       if parent != node
         parent.left = successor.right
       else
@@ -97,15 +97,175 @@ class Tree
     end
   end
 
+  def level_order(node = @root)
+    return [] if node.nil?
+
+    queue = []
+    output = []
+    queue.push(node)
+    while !queue.empty?
+      current = queue.shift
+      queue.push(current.left) if current.left != nil
+      queue.push(current.right) if current.right != nil
+      block_given? ? yield(current.data) : output.push(current.data)
+    end
+    puts "Level order: #{output}"
+  end
+
+  def inorder(node = @root, &block)
+    return [] if node.nil?
+    
+    output = []
+    left = inorder(node.left, &block)
+    output += left unless left.empty?
+
+    block_given? ? yield(node.data) : output.push(node.data)
+
+    right = inorder(node.right, &block)
+    output += right unless right.empty?
+
+    output unless block_given?
+
+    # another easier method to do it is:
+    # inorder(node.left)
+    # print "#{node.data} "
+    # inorder(node.right)
+  end
+
+  def preorder(node = @root, &block)
+    return [] if node.nil?
+
+    output = []
+    block_given? ? yield(node.data) : output.push(node.data)
+
+    left = preorder(node.left, &block)
+    output += left unless left.empty?
+
+    right = preorder(node.right, &block)
+    output += right unless right.empty?
+
+    output unless block_given?
+
+    # print "#{node.data}"
+    # preorder(node.left)
+    # preorder(node.right)
+  end
+
+  def postorder(node = @root, &block)
+    return [] if node.nil?
+
+    output = []
+    left = postorder(node.left, &block)
+    output += left
+
+    right = postorder(node.right, &block)
+    output += right
+
+    block_given? ? yield(node.data) : output.push(node.data)
+
+    output unless block_given?
+
+    # postorder(node.left)
+    # postorder(node.right)
+    # print "#{node.data}"
+  end
+
+  def height(node = @root)
+    return -1 if node.nil?
+
+    left = height(node.left)
+    right = height(node.right)
+    heigth = [left, right].max + 1
+  end
+
+  def depth(node = @root, value)
+    return -1 if node.nil?
+
+    dist = -1
+    if value == node.data
+      return 0
+    else
+      left = depth(node.left, value)
+      right = depth(node.right, value)
+
+      if left >= 0
+        left + 1
+      elsif right >= 0
+        right + 1
+      else
+        return -1
+      end
+    end
+  end
+
+  def balanced?(node = @root)
+    return true if node.nil?
+
+    left = height(node.left)
+    right = height(node.right)
+    if (left - right).abs <= 1 && balanced?(node.left)==true && balanced?(node.right)==true
+      return true
+    else
+      return false
+    end
+  end
+
+  def rebalance
+    array = inorder
+    @root = build_tree(array)
+  end
+
+  def insert_nodes
+    rand(2..10).times do
+    insert(rand(100..999))
+    end
+  end
 end
 
-tree = Tree.new([1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324])
-tree.insert(40)
-tree.insert(4)
-tree.insert(8)
-tree.insert(2)
-tree.delete(1)
-tree.delete(67)
-tree.pretty_print
+def driver
+  tree = Tree.new(Array.new(15) { rand(1..100) })
+  puts "Creating new tree"
+  puts ""
+  puts "Checking if tree is balanced"
+  puts ""
+  puts "Tree Balanced: #{tree.balanced?}"
+  puts ""
+  puts "Original Tree:"
+  tree.pretty_print
+  puts ""
+  tree.level_order
+  puts ""
+  puts "In order #{tree.inorder} "
+  puts ""
+  puts "Preorder #{tree.preorder}"
+  puts ""
+  puts "Postorder #{tree.postorder}"
+  puts ""
+  puts "Inserting additional numbers in the tree!"
+  tree.insert_nodes
+  puts ""
+  puts "Checking if tree balanced after inserting additional numbers"
+  puts ""
+  puts "Tree Balanced: #{tree.balanced?}"
+  puts ""
+  puts "If tree is not balanced -> rebalance"
+  puts ""
+  tree.rebalance
+  puts ""
+  puts "Rebalancing complete"
+  puts ""
+  puts "Tree Balanced: #{tree.balanced?}"
+  puts ""
+  puts "New Tree:"
+  tree.pretty_print
+  puts ""
+  tree.level_order
+  puts ""
+  puts "In order #{tree.inorder} "
+  puts ""
+  puts "Preorder #{tree.preorder}"
+  puts ""
+  puts "Postorder #{tree.postorder}"
+end
 
-tree.find(55)
+driver
